@@ -1,11 +1,16 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
-#include "credentials.h"
+#include "libraries/credentials.h"
 #include <Servo.h>
 
 // Defines para actuadores y sensores
-#define ServoDireccion Dx
-#define ServoSensor Dx
+#define Trigger D0
+#define Echo D1
+#define ENA D2
+#define MA D3
+#define MB D4
+#define ServoDireccion D7
+#define ServoSensor D8
 
 //  Creación de objetos  //
 ESP8266WiFiMulti WiFiMulti;
@@ -16,21 +21,33 @@ Servo sensor;
 
 //  Variables globales  //
 String header;
-unsigned long lastTime,timeout = 2000;
+unsigned int timeout = 2000;
+unsigned long lastTime;
 unsigned char AngleDireccion = 90;
 unsigned char AngleSensor = 90;
+unsigned char velocidad = 255;
+unsigned char servoDirPos = 90;
+unsigned char servoSenPos = 90;
+unsigned long t;
+unsigned char d;
 
 //  Declaración de funciones  //
 void initWiFiMulti();
 void etapaControl();
 void PosicionInicial();
 
-void setup() {
+void setup(){
   Serial.begin(9600);
 
   //  Inicialización de sensores y actuadores  //
   direccion.attach(ServoDireccion);
   sensor.attach(ServoSensor);
+
+  pinMode(Trigger, OUTPUT);
+  pinMode(Echo, OUTPUT);
+  pinMode(ENA, OUTPUT);
+  pinMode(MA, OUTPUT);
+  pinMode(MB, OUTPUT);
 
   //  Inicialización de WiFiMulti  //
   WiFiMulti.addAP(ssid_casa, pass_casa);
@@ -41,9 +58,11 @@ void setup() {
 
   //  Inicialización de WiFiServer  //
   server.begin();
+
+  delay(2000);
 }
 
-void loop() {
+void loop(){
   WiFiClient client = server.available();
 
   if(client){
@@ -95,27 +114,43 @@ void initWiFiMulti(){
 void etapaControl(){
   if(header.indexOf("GET /MOV=ADE") >= 0){
     Serial.println("Movimiento ADELANTE");
-    // Logica para adelante.
+    analogWrite(ENA, velocidad);
+    digitalWrite(MA, 1);
+    digitalWrite(MB, 0);
 
   } else if(header.indexOf("GET /MOV=ATR") >= 0){
     Serial.println("Movimiento ATRAS");
-    // Logica para atras.
+    analogWrite(ENA, velocidad);
+    digitalWrite(MA, 0);
+    digitalWrite(MB, 1);
 
   } else if(header.indexOf("GET /MOV=IZQ") >= 0){
     Serial.println("Movimiento IZQUIERDA");
-    // Logica para izquierda.
+    analogWrite(ENA, velocidad);
+    digitalWrite(MA, 1);
+    digitalWrite(MB, 0);
+
+    servoDirPos -= 10;
+    ServoDireccion.write(servoDirPos);
 
   } else if(header.indexOf("GET /MOV=DER") >= 0){
     Serial.println("Movimiento DERECHA");
-    // Logica para derecha.
+    analogWrite(ENA, velocidad);
+    digitalWrite(MA, 1);
+    digitalWrite(MB, 0);
+
+    servoDirPos += 10;
+    ServoDireccion.write(servoDirPos);
 
   } else if(header.indexOf("GET /GIR=IZQ") >= 0){
     Serial.println("Giro IZQUIERDA");
-    // Logica para giro izquierda.
+    servoSenPos -= 10;
+    ServoSensor.write(servoSenPos);
 
   } else if(header.indexOf("GET /GIR=DER") >= 0){
     Serial.println("Giro DERECHA");
-    // Logica para giro derecha.
+    servoSenPos += 10;
+    ServoSensor.write(servoSenPos);
 
   } else if(header.indexOf("GET /POS=REIN") >= 0){
     Serial.println("Reinicio de posición");
@@ -123,19 +158,35 @@ void etapaControl(){
 
   } else if(header.indexOf("GET /VEL=MAX") >= 0){
     Serial.println("Velocidad MAXIMA");
-    // Logica para setear velocidad maxima.
+    velocidad = 255;
 
   } else if(header.indexOf("GET /VEL=MED") >= 0){
     Serial.println("Velocidad MEDIA");
-    // Logica para setear velocidad media.
+    velocidad = 140;
 
   } else if(header.indexOf("GET /VEL=MIN") >= 0){
     Serial.println("Velocidad MINIMA");
-    // Logica para setear velocidad minima.
-
+    velocidad = 40;
   }
 }
 
 void PosicionInicial(){
+  ServoDireccion.write(90);
+  delay(10);
+  ServoSensor.write(90);
+  delay(10);
 
+  digitalWrite(MA, 0);
+  digitalWrite(MB, 0);
+}
+
+void getDistance(){
+  digitalWrite(Trigger, LOW);
+  delayMicroseconds(2);
+  digitalWrite(Trigger, HIGH);
+  delayMicroseconds(10);  //Enviamos un pulso de 10us
+  digitalWrite(Trigger, LOW);
+  
+  t = pulseIn(Echo, HIGH);  //obtenemos el ancho del pulso
+  d = t / 58.4;             //escalamos el tiempo a una distancia en cm
 }
