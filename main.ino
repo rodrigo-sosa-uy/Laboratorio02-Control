@@ -7,8 +7,10 @@
 #define Trigger D0
 #define Echo D1
 #define ENA D2
-#define MA D3
-#define MB D4
+#define M1A D3
+#define M1B D4
+#define M2A D5
+#define M2B D6
 #define ServoDireccion D7
 #define ServoSensor D8
 
@@ -24,8 +26,8 @@ String header;
 unsigned int timeout = 2000;
 unsigned long lastTime;
 uint8_t velocidad = 255;
-uint16_t servoDirPos = 1750;
-uint16_t servoSenPos = 1500;
+uint16_t servoDirPos = 95;
+uint16_t servoSenPos = 95;
 unsigned long t;
 uint8_t d;
 
@@ -39,14 +41,16 @@ void setup(){
   Serial.begin(9600);
 
   //  Inicialización de sensores y actuadores  //
-  direccion.attach(ServoDireccion, 750, 2750); // Calibración para ESP8266
-  sensor.attach(ServoSensor, 650, 2400); // Calibración para ESP8266
+  direccion.attach(ServoDireccion, 500, 2400); // Calibración para ESP8266 [5,95,180]
+  sensor.attach(ServoSensor, 500, 2400); // Calibración para ESP8266 [15,95,180]
 
   pinMode(Trigger, OUTPUT);
   pinMode(Echo, OUTPUT);
-  pinMode(ENA, OUTPUT);
-  pinMode(MA, OUTPUT);
-  pinMode(MB, OUTPUT);
+  pinMode(ENA, OUTPUT); // LM1117 - 3,3 [MAX: 7V]
+  pinMode(M1A, OUTPUT);
+  pinMode(M1B, OUTPUT);
+  pinMode(M2A, OUTPUT);
+  pinMode(M2B, OUTPUT);
 
   //  Inicialización de WiFiMulti  //
   WiFiMulti.addAP(ssid_casa, pass_casa);
@@ -119,48 +123,56 @@ void etapaControl(){
     Serial.println("Movimiento ADELANTE");
     Serial.print("Velocidad: "); Serial.println(velocidad);
     analogWrite(ENA, velocidad);
-    digitalWrite(MA, 1);
-    digitalWrite(MB, 0);
+    digitalWrite(M1A, 1);
+    digitalWrite(M1B, 0);
+    digitalWrite(M2A, 1);
+    digitalWrite(M2B, 0);
 
   } else if(header.indexOf("GET /MOV=ATR") >= 0){
     Serial.println("Movimiento ATRAS");
     Serial.print("Velocidad: "); Serial.println(velocidad);
     analogWrite(ENA, velocidad);
-    digitalWrite(MA, 0);
-    digitalWrite(MB, 1);
+    digitalWrite(M1A, 0);
+    digitalWrite(M1B, 1);
+    digitalWrite(M2A, 0);
+    digitalWrite(M2B, 1);
 
   } else if(header.indexOf("GET /MOV=IZQ") >= 0){
     Serial.println("Movimiento IZQUIERDA");
     Serial.print("Velocidad: "); Serial.println(velocidad);
     analogWrite(ENA, velocidad);
-    digitalWrite(MA, 1);
-    digitalWrite(MB, 0);
+    digitalWrite(M1A, 1);
+    digitalWrite(M1B, 0);
+    digitalWrite(M2A, 1);
+    digitalWrite(M2B, 0);
 
-    servoDirPos += 250;
-    direccion.writeMicroseconds(servoDirPos);
+    servoDirPos += 50;
+    direccion.write(servoDirPos);
     Serial.print("Angulo Direccion: "); Serial.println(servoDirPos);
 
   } else if(header.indexOf("GET /MOV=DER") >= 0){
     Serial.println("Movimiento DERECHA");
     Serial.print("Velocidad: "); Serial.println(velocidad);
     analogWrite(ENA, velocidad);
-    digitalWrite(MA, 1);
-    digitalWrite(MB, 0);
+    digitalWrite(M1A, 1);
+    digitalWrite(M1B, 0);
+    digitalWrite(M2A, 1);
+    digitalWrite(M2B, 0);
 
-    servoDirPos -= 250;
-    direccion.writeMicroseconds(servoDirPos);
+    servoDirPos -= 50;
+    direccion.write(servoDirPos);
     Serial.print("Angulo Direccion: "); Serial.println(servoDirPos);
 
   } else if(header.indexOf("GET /GIR=IZQ") >= 0){
     Serial.println("Giro IZQUIERDA");
-    servoSenPos += 250;
-    sensor.writeMicroseconds(servoSenPos);
+    servoSenPos += 30;
+    sensor.write(servoSenPos);
     Serial.print("Angulo Sensor: "); Serial.println(servoSenPos);
 
   } else if(header.indexOf("GET /GIR=DER") >= 0){
     Serial.println("Giro DERECHA");
-    servoSenPos -= 250;
-    sensor.writeMicroseconds(servoSenPos);
+    servoSenPos -= 30;
+    sensor.write(servoSenPos);
     Serial.print("Angulo Sensor: "); Serial.println(servoSenPos);
 
   } else if(header.indexOf("GET /POS=REIN") >= 0){
@@ -182,18 +194,20 @@ void etapaControl(){
 }
 
 void PosicionInicial(){
-  servoDirPos = 1750;
-  servoSenPos = 1500;
-  direccion.writeMicroseconds(servoDirPos);
+  servoDirPos = 95;
+  servoSenPos = 95;
+  direccion.write(servoDirPos);
   delay(10);
-  sensor.writeMicroseconds(servoSenPos);
+  sensor.write(servoSenPos);
   delay(10);
 
   Serial.print("Angulo Direccion: "); Serial.println(servoDirPos);
   Serial.print("Angulo Sensor: "); Serial.println(servoSenPos);
 
-  digitalWrite(MA, 0);
-  digitalWrite(MB, 0);
+  digitalWrite(M1A, 0);
+  digitalWrite(M1B, 0);
+  digitalWrite(M2A, 0);
+  digitalWrite(M2B, 0);
 }
 
 void getDistance(){
