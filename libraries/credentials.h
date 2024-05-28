@@ -4,11 +4,11 @@
 ESP8266 Pinout
 D0 - GPIO16 - TRIGGER
 D1 - GPIO5 - ECHO
-D2 - GPIO4 - EN1
-D3 - GPIO0 - MA
-D4 - GPIO2 - MB
-D5 - GPIO14 - 
-D6 - GPIO12 - 
+D2 - GPIO4 - ENA
+D3 - GPIO0 - M1A
+D4 - GPIO2 - M1B
+D5 - GPIO14 - M2A
+D6 - GPIO12 - M2B
 D7 - GPIO13 - Servo Direccion
 D8 - GPIO15 - Servo Sensor
 */
