@@ -154,7 +154,7 @@ void etapaControl(){
     digitalWrite(M2A, 1);
     digitalWrite(M2B, 0);
 
-    servoDirPos = 25;
+    servoDirPos = 55;
     direccion.write(servoDirPos);
 
   } else if(header.indexOf("GET /MOV=DER") >= 0){
@@ -164,7 +164,7 @@ void etapaControl(){
     digitalWrite(M2A, 1);
     digitalWrite(M2B, 0);
 
-    servoDirPos = 165;
+    servoDirPos = 135;
     direccion.write(servoDirPos);
 
   } else if(header.indexOf("GET /GIR=IZQ") >= 0){
@@ -179,10 +179,10 @@ void etapaControl(){
     PosicionInicial();
 
   } else if(header.indexOf("GET /VEL=MAX") >= 0){
-    velocidad = 220;
+    velocidad = 200;
 
   } else if(header.indexOf("GET /VEL=MED") >= 0){
-    velocidad = 170;
+    velocidad = 150;
 
   } else if(header.indexOf("GET /VEL=MIN") >= 0){
     velocidad = 100;
