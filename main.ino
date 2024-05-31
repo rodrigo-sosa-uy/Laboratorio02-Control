@@ -24,9 +24,10 @@ Servo sensor;
 //  Variables globales  //
 String header;
 unsigned int timeout = 2000;
+unsigned int timeD = 300;
 unsigned long lastTime;
-uint8_t velocidad = 220;
-uint16_t servoDirPos = 95;
+uint8_t velocidad = 200;
+uint16_t servoDirPos = 100;
 uint16_t servoSenPos = 95;
 unsigned long t;
 uint8_t d;
@@ -53,9 +54,9 @@ void setup(){
   pinMode(M2B, OUTPUT);
 
   //  Inicialización de WiFiMulti  //
-  WiFiMulti.addAP(ssid_casa, pass_casa);
+  //WiFiMulti.addAP(ssid_casa, pass_casa);
   WiFiMulti.addAP(ssid_telf, pass_telf);
-  WiFiMulti.addAP(ssid_utec, pass_utec);
+  //WiFiMulti.addAP(ssid_utec, pass_utec);
 
   initWiFiMulti();
 
@@ -101,7 +102,7 @@ void loop(){
     }
     header = "";
   } else{
-    if(millis() >= (lastTime + 2500)){
+    if(millis() >= (lastTime + timeD)){
       digitalWrite(M1A, 0);
       digitalWrite(M1B, 0);
       digitalWrite(M2A, 0);
@@ -164,7 +165,7 @@ void etapaControl(){
     digitalWrite(M2A, 1);
     digitalWrite(M2B, 0);
 
-    servoDirPos = 135;
+    servoDirPos = 140;
     direccion.write(servoDirPos);
 
   } else if(header.indexOf("GET /GIR=IZQ") >= 0){
@@ -180,12 +181,15 @@ void etapaControl(){
 
   } else if(header.indexOf("GET /VEL=MAX") >= 0){
     velocidad = 200;
+    timeD = 300;
 
   } else if(header.indexOf("GET /VEL=MED") >= 0){
     velocidad = 150;
+    timeD = 800;
 
   } else if(header.indexOf("GET /VEL=MIN") >= 0){
     velocidad = 100;
+    timeD = 1300;
   }
 }
 
